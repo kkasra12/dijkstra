@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+  <meta charset="utf-8">
+  <title></title>
+  <!-- jquery -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+  <!-- jquery confirm  -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.js"></script>
+
+  <!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+  integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css"> -->
+
+  <!-- vis -->
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css" rel="stylesheet" type="text/css" />
+
+  <!-- fontawesome -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+
+  <!-- bootstrap -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+
+  <style type="text/css">
+    #mynetwork {
+      width: 100%;
+      height: 400px;
+      border: 2px solid rgb(120, 183, 255);
+      margin-top: 10px;
+    }
+    .controls {
+      margin-left: auto;
+      margin-right: auto;
+      width: fit-content;
+    }
+    .caution {
+      color: red;
+      display: none;
+    }
+    div.controls > label:nth-child(1){
+      margin-right: 28px;
+    }
+    .buttons{
+      display: table;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    button{
+      margin: 2px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="mynetwork"></div><br>
+  <div class="controls">
+    <!-- <form id="fr" method="post"> -->
+    <label for="src">Source: </label>
+    <input type="text" id="src" value="" autofocus><br>
+
+    <label for="dst">Destination:</label>
+    <input type="text" id="dst" value=""><br>
+    <div class="buttons" id="btns">
+      <button onclick="start()" class="btn btn-success" id="run_btn">start <i class="far fa-play-circle"></i></button>
+      <button onclick="reset()" class="btn btn-danger"  id="run_btn">reset <i class="fas fa-undo"></i></button><br>
+    </div>
+    <small class="caution" id="caution">please select valid nodes!!!</small>
+  <!-- </form> -->
+  </div>
+  <p id="ans"></p>
+
+  <script type="text/javascript">
+  function does_contain(array, content) {
+    for (i = 0; i < array.length; i++)
+      if (array[i] == content) return true;
+    return false;
+  }
+  function does_contain_id(array, content) {
+    for (i = 0; i < array.length; i++)
+      if (array[i].id == content) return true;
+    return false;
+  }
+
+    // create an array with nodes
+    var nodes = new vis.DataSet([
+      {id: 'a',label: 'a'},
+      {id: 'b',label: 'b'},
+      {id: 'c',label: 'c'},
+      {id: 'd',label: 'd'},
+      {id: 'e',label: 'e'},
+      {id: 'f',label: 'f'}
+    ]);
+
+    // create an array with edges
+    var edges = new vis.DataSet([
+      {from: "a", to: "b", arrows:'to',label: '10',font: {align: 'horizontal'}},
+      {from: "a", to: "c", arrows:'to',label: '15',font: {align: 'horizontal'}},
+      {from: "b", to: "f", arrows:'to',label: '16',font: {align: 'horizontal'}},
+      {from: "b", to: "d", arrows:'to',label: '12',font: {align: 'horizontal'}},
+      {from: "d", to: "f", arrows:'to',label: '1' ,font: {align: 'horizontal'}},
+      {from: "d", to: "e", arrows:'to',label: '2' ,font: {align: 'horizontal'}},
+      {from: "f", to: "e", arrows:'to',label: '5' ,font: {align: 'horizontal'}},
+      {from: "c", to: "e", arrows:'to',label: '10',font: {align: 'horizontal'}}
+    ]);
+
+
+    // create a network
+    var container = document.getElementById('mynetwork');
+    var data = {
+      nodes: nodes,
+      edges: edges
+    };
+    var options = {
+      layout: {},
+      manipulation: {
+        enabled: true,
+        addNode: function (nodeData, callBack) {
+          $.confirm({
+            title: "add noede",
+            content: ''+
+              '<form action="" class="formName">' +
+              '<div class="form-group">' +
+              '<label>node id</label>' +
+              '<input type="text" placeholder="" class="id form-control" required autofocus><br>' +
+              '</div>' +
+              '</form>',
+            buttons: {
+              formSubmit: {
+                text: "add",
+                action: function () {
+                  var name = this.$content.find('.id').val();
+                  // console.log(name);
+                  if (!name) return false;
+                  if (!does_contain(nodes.getIds(), name)) {
+
+                    nodes.add([{
+                      id: name,
+                      label: name}]);
+                  } else
+                    return false;
+                }
+              },
+              cancel: function () {}
+            },
+            onContentReady: function () {
+              var jc = this;
+              this.$content.find('form').on('submit', function (e) {
+                e.preventDefault();
+                jc.$$formSubmit.trigger('click');
+                // callBack(nodeData);
+              });
+            }
+          });
+        },
+        addEdge: function (data, callBack) {
+          $.confirm({
+            title: "add noede",
+            content: ''+
+              '<form action="" class="formName">' +
+              '<div class="form-group">' +
+              '<label>edge\'s weight</label>' +
+              '<input type="number" placeholder="" class="id form-control" required autofocus><br>' +
+              '</div></form>',
+            buttons: {
+              formSubmit: {
+                text: "add",
+                action: function () {
+                  var weight = this.$content.find('.id').val();
+                  if (!weight) return false;
+                  data.arrows='to';
+                  data.label=weight;
+                  data.font={align: 'horizontal'};
+                  callBack(data)
+                }
+              },
+              cancel: function () {}
+            },
+            onContentReady: function () {
+              var jc = this;
+              this.$content.find('form').on('submit', function (e) {
+                e.preventDefault();
+                jc.$$formSubmit.trigger('click');
+                // callBack(nodeData);
+              });
+            }
+        });
+      }
+    }};
+    var network = new vis.Network(container, data, options);
+
+
+    function find_node(id,nodes) {
+      for (i = 0; i < nodes.length; i++)
+        if (nodes[i].id == id)
+          return nodes[i];
+      return false
+    }
+
+    //count=0;sequence=null;nodes_backup=[];
+
+
+    run_btn=document.getElementById("run_btn")
+
+    function start(){
+      src = document.getElementById("src").value;
+      dst = document.getElementById("dst").value;
+      if (!does_contain(nodes.getIds(), src) || !does_contain(nodes.getIds(),dst)) {
+        alert("oops!!");
+        document.getElementById("caution").style.display = "inline";
+        return;
+      } else document.getElementById("caution").style.display = "none";
+      reset();
+      tmp=document.getElementById('btns').children;
+      for (var i = 0; i < tmp.length; i++) // to disable two buttons
+        tmp[i].disabled=true;
+      dijkestra(find_node(src,nodes.get()),find_node(dst,nodes.get()));
+    }
+
+    fathers=[]
+    function dijkestra(src,dst){
+      boundry_edges=[]
+      final_edges=[] // this is the answer. this list will present for the user
+      selected_nodes=[src];
+      boundry_edges=find_outcoming_edges(src,edges.get()); // (boundry yani marzi)
+      while(selected_nodes.length<nodes.length){
+          //find minimum edge in boundry_edges
+          min_length=parseInt(boundry_edges[0].label)
+          min_index=0
+          for (var i=1;i<boundry_edges.length;i++)
+            if (parseInt(boundry_edges[i].label)<min_length &&
+                !does_contain_id(selected_nodes,boundry_edges[i].to)) { // make sure by chosing this edge the graph is still tree
+              min_length=parseInt(boundry_edges[i].label);min_index=i;}
+          tmp=boundry_edges.splice(min_index,1)[0]; // pop this edge from boundry_edges
+          final_edges.push(tmp); // add this edge to final nodes
+          father=find_node(tmp.from,nodes.get())
+          tmp=find_node(tmp.to,nodes.get()) // add next node to selected_nodes
+          selected_nodes.push(tmp);
+          fathers.push({node:tmp,father:father})
+          tmp=find_outcoming_edges(tmp,edges.get()); // add new edges to boundry_edges
+          for (var i = 0; i < tmp.length; i++) // be aware: find_outcoming_edges function's output is list; So it each element should concat the boundry_edges seperatly
+            boundry_edges.push(tmp[i]);
+
+      } // do these until all nodes are selected
+      // now we will start the animation
+      nodes.update({id:src.id,color:'red'}) // make the source node red
+      draw_ans(final_edges,0,dst,src); // start the animation
+
+    }
+    function find_outcoming_edges(node,data){
+      var ans=[];
+      for (var i = 0; i < data.length; i++)
+        if (data[i].from==node.id)
+          ans=ans.concat(data[i])
+      return ans;
+    }
+
+    function draw_ans(sequence,index,dst,src) {   // in each execution next edge will be colored
+      edges.update({id:sequence[index].id,color:{color:'red'}});  // color current edge red
+      index++; // go to next edge
+      if(index<sequence.length) setTimeout(function (){draw_ans(sequence,index,dst,src)},1000); // show the next edge after one sec
+      else { // if animation is finished color the destination node red and enable the buttons
+        nodes.update({id:dst.id,color:'red'});
+        tmp=document.getElementById('btns').children;
+        for (var i = 0; i < tmp.length; i++)
+          tmp[i].disabled=false;
+        show_route(src,dst);
+
+      }
+    }
+    function find_edge(from,to,edges){
+      for (i = 0; i < edges.length; i++)
+        if (edges[i].from == from && edges[i].to == to)
+          return edges[i];
+      return false
+    }
+    function show_route(src,dst){
+      dst=dst.id;
+      src=src.id;
+      console.log(src);
+      console.log(dst);
+      console.log(fathers);
+      while(true){
+        for(i=0;i<fathers.length;i++)
+          if(fathers[i].node.id==dst)
+            father=fathers[i].father.id;
+        console.log(father);
+        console.log(dst);
+        id=find_edge(father,dst,edges.get()).id
+        console.log(id);
+        if(id==false) break;
+        edges.update({id:id,color:{color:"green"}});
+        dst=father;
+        if(father==src) break;
+      }
+
+    }
+    function reset(){
+      tmp=edges.getIds()
+      for (var i = 0; i < tmp.length; i++) // color the edges blue
+        edges.update({id:tmp[i],color:{color:'blue'}});
+      tmp=nodes.getIds()
+      for (var i = 0; i < tmp.length; i++) // coloe the nodes blue
+        nodes.update({id:tmp[i],color:'blue'});
+      fathers=[]
+    }
+
+
+  </script>
+</body>
+</html>
